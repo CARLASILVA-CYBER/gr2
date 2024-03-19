@@ -1,0 +1,53 @@
+import pandas as pd
+import random
+
+def amostra_estratificada(file_path, tamanho_amostra):
+    # Ler o arquivo XLS
+    dados = pd.read_excel(file_path)
+    
+    # Definir os estratos para cada variável
+    estratos_genero = dados['Género'].unique()
+    estratos_habilitacoes = dados['Grau de escolaridade'].unique()
+    estratos_freguesia = dados['Freguesia'].unique()
+    # Suponho que 'Data de Nascimento' seja uma coluna numérica, então vou dividi-la em intervalos
+    estratos_idade = pd.cut(pd.to_datetime(dados['Data de Nascimento']).dt.year, bins=5).unique()
+    estratos_situacao_profissional = dados['Situação Profissional'].unique()
+    estratos_nacionalidade = dados['Nacionalidade'].unique()
+    
+    # Inicializar uma lista para armazenar as amostras estratificadas de cada estrato
+    amostras_estratificadas = []
+    
+    # Para cada combinação de estratos, amostrar proporcionalmente e adicionar à lista de amostras
+    for genero in estratos_genero:
+        for habilitacao in estratos_habilitacoes:
+            for freguesia in estratos_freguesia:
+                for idade in estratos_idade:
+                    for situacao_profissional in estratos_situacao_profissional:
+                        for nacionalidade in estratos_nacionalidade:
+                            dados_estrato = dados[(dados['Género'] == genero) &
+                                                  (dados['Grau de escolaridade'] == habilitacao) &
+                                                  (dados['Freguesia'] == freguesia) &
+                                                  (pd.cut(pd.to_datetime(dados['Data de Nascimento']).dt.year, bins=5) == idade) &
+                                                  (dados['Situação Profissional'] == situacao_profissional) &
+                                                  (dados['Nacionalidade'] == nacionalidade)]
+                            tamanho_amostra_estrato = int(tamanho_amostra * len(dados_estrato) / len(dados))
+                            amostra_estrato = dados_estrato.sample(n=tamanho_amostra_estrato, random_state=42)
+                            amostras_estratificadas.append(amostra_estrato)
+    
+    # Concatenar as amostras de todos os estratos para obter a amostra final
+    amostra_final = pd.concat(amostras_estratificadas)
+    
+    # Selecionar apenas o número dos selecionados
+    numeros_selecionados = amostra_final['Número'].tolist()
+    
+    return numeros_selecionados
+
+# Caminho para o arquivo XLS
+caminho_arquivo = 'C:\\Users\\carlasilva\\Desktop\\exemplo_123.xlsx'
+
+# Tamanho da amostra desejada
+tamanho_amostra = 50
+
+# Chamar a função e exibir o resultado
+numeros_selecionados = amostra_estratificada(caminho_arquivo, tamanho_amostra)
+print(numeros_selecionados)
